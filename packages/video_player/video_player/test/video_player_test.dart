@@ -355,17 +355,6 @@ void main() {
 
         expect(controller.value.speed, speed);
       });
-
-      test('ignores negative values', () async {
-        final VideoPlayerController controller = VideoPlayerController.network(
-          'https://127.0.0.1',
-        );
-        await controller.initialize();
-        expect(controller.value.speed, 1.0);
-
-        await controller.setVolume(-1);
-        expect(controller.value.speed, 1.0);
-      });
     });
 
     group('caption', () {
@@ -622,6 +611,7 @@ class FakeVideoPlayerPlatform {
       case 'play':
       case 'setLooping':
       case 'setVolume':
+      case 'setSpeed':
         break;
       default:
         throw UnimplementedError(
