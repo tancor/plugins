@@ -455,9 +455,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   }
 
   /// Sets the audio playback speed of [this].
-  /// [speed] indicates a non-negative value.
   Future<void> setSpeed(double speed) async {
-    value = value.copyWith(speed: (speed >= 0 ? speed : 1));
+    value = value.copyWith(speed: speed);
     await _applySpeed();
   }
 

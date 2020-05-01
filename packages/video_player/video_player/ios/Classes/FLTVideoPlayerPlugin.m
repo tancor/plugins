@@ -363,14 +363,11 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 - (void)setSpeed:(double)speed {
     float newSpeed = (float)speed;
 
-    if (speed < 0) {
-        newSpeed = 0.0;
-    } else if (speed > 2) {
-        newSpeed = 2.0;
-    }
-
-    if ((speed < 1.0 && !_player.currentItem.canPlaySlowForward)
-        || (speed > 1.0 && !_player.currentItem.canPlayFastForward)) {
+    if ((speed > 2.0 && !_player.currentItem.canPlayFastForward)
+        || (speed > 0.0 && speed < 1.0 && !_player.currentItem.canPlaySlowForward)
+        || (speed == -1.0 && !_player.currentItem.canPlayReverse)
+        || (speed < 0.0 && speed > -1.0 && !_player.currentItem.canPlaySlowReverse)
+        || (speed < -1.0 && !_player.currentItem.canPlayFastReverse)) {
         newSpeed = 1.0;
     }
 
