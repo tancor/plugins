@@ -45,6 +45,7 @@ int64_t FLTCMTimeToMillis(CMTime time) {
 @property(nonatomic, readonly) bool isPlaying;
 @property(nonatomic) bool isLooping;
 @property(nonatomic, readonly) bool isInitialized;
+@property (nonatomic) NSInteger fails;
 @property(nonatomic) double requiredSpeed;
 - (instancetype)initWithURL:(NSURL*)url frameUpdater:(FLTFrameUpdater*)frameUpdater;
 - (void)play;
@@ -383,11 +384,19 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 
 - (CVPixelBufferRef)copyPixelBuffer {
   CMTime outputItemTime = [_videoOutput itemTimeForHostTime:CACurrentMediaTime()];
-  //if ([_videoOutput hasNewPixelBufferForItemTime:outputItemTime]) {
+  if ([_videoOutput hasNewPixelBufferForItemTime:outputItemTime]) {
+      _fails = 0;
     return [_videoOutput copyPixelBufferForItemTime:outputItemTime itemTimeForDisplay:NULL];
-  //} else {
-    //return NULL;
-  //}
+  } else {
+      _fails += 1;
+
+      if (_fails == 120) {
+          _fails = 0;
+          [_player.currentItem removeOutput:_videoOutput];
+          [_player.currentItem addOutput:_videoOutput];
+      }
+    return NULL;
+  }
 }
 
 - (void)onTextureUnregistered {
