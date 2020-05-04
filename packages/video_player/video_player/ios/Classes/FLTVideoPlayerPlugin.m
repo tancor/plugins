@@ -383,11 +383,11 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 
 - (CVPixelBufferRef)copyPixelBuffer {
   CMTime outputItemTime = [_videoOutput itemTimeForHostTime:CACurrentMediaTime()];
-  if ([_videoOutput hasNewPixelBufferForItemTime:outputItemTime]) {
+  //if ([_videoOutput hasNewPixelBufferForItemTime:outputItemTime]) {
     return [_videoOutput copyPixelBufferForItemTime:outputItemTime itemTimeForDisplay:NULL];
-  } else {
-    return NULL;
-  }
+  //} else {
+    //return NULL;
+  //}
 }
 
 - (void)onTextureUnregistered {
