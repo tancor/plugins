@@ -155,7 +155,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     if (![self.videoOutput hasNewPixelBufferForItemTime:CMTimeMake(1, 10)]) {
         [self createVideoOutputAndDisplayLink:nil];
     }
-    [self.displayLink setPaused:NO];
+//    [self.displayLink setPaused:NO];
 }
 
 - (void)createVideoOutputAndDisplayLink:(FLTFrameUpdater*)frameUpdater {
