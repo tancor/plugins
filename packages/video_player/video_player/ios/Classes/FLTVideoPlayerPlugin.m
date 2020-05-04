@@ -34,7 +34,7 @@ int64_t FLTCMTimeToMillis(CMTime time) {
 }
 @end
 
-@interface FLTVideoPlayer : NSObject <FlutterTexture, FlutterStreamHandler>
+@interface FLTVideoPlayer : NSObject <FlutterTexture, FlutterStreamHandler, AVPlayerItemOutputPullDelegate>
 @property(readonly, nonatomic) AVPlayer* player;
 @property(readonly, nonatomic) AVPlayerItemVideoOutput* videoOutput;
 @property(readonly, nonatomic) CADisplayLink* displayLink;
@@ -47,6 +47,7 @@ int64_t FLTCMTimeToMillis(CMTime time) {
 @property(nonatomic, readonly) bool isInitialized;
 @property (nonatomic) NSInteger fails;
 @property(nonatomic) double requiredSpeed;
+@property (nonatomic) FLTFrameUpdater *fu;
 - (instancetype)initWithURL:(NSURL*)url frameUpdater:(FLTFrameUpdater*)frameUpdater;
 - (void)play;
 - (void)pause;
@@ -150,14 +151,23 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
   return videoComposition;
 }
 
+- (void)outputMediaDataWillChange:(AVPlayerItemOutput *)sender {
+    if (![self.videoOutput hasNewPixelBufferForItemTime:CMTimeMake(1, 10)]) {
+        [self createVideoOutputAndDisplayLink:nil];
+    }
+    [self.displayLink setPaused:NO];
+}
+
 - (void)createVideoOutputAndDisplayLink:(FLTFrameUpdater*)frameUpdater {
   NSDictionary* pixBuffAttributes = @{
     (id)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA),
     (id)kCVPixelBufferIOSurfacePropertiesKey : @{}
   };
   _videoOutput = [[AVPlayerItemVideoOutput alloc] initWithPixelBufferAttributes:pixBuffAttributes];
+    [_videoOutput setDelegate:self queue:dispatch_get_main_queue()];
 
-  _displayLink = [CADisplayLink displayLinkWithTarget:frameUpdater
+    [_displayLink invalidate];
+  _displayLink = [CADisplayLink displayLinkWithTarget:_fu
                                              selector:@selector(onDisplayLink:)];
   [_displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
   _displayLink.paused = YES;
@@ -229,7 +239,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 
   _player = [AVPlayer playerWithPlayerItem:item];
   _player.actionAtItemEnd = AVPlayerActionAtItemEndNone;
-
+    _fu = frameUpdater;
   [self createVideoOutputAndDisplayLink:frameUpdater];
 
   [self addObservers:item];
