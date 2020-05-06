@@ -43,6 +43,7 @@ int64_t FLTCMTimeToMillis(CMTime time) {
 @property(nonatomic) CGAffineTransform preferredTransform;
 @property(nonatomic, readonly) bool disposed;
 @property(nonatomic, readonly) bool isPlaying;
+@property(nonatomic) bool isWaitingForEnoughBuffered;
 @property(nonatomic) bool isLooping;
 @property(nonatomic, readonly) bool isInitialized;
 @property(nonatomic) double requiredSpeed;
@@ -98,6 +99,7 @@ static void* playbackBufferFullContext = &playbackBufferFullContext;
   if (_isLooping) {
     AVPlayerItem* p = [notification object];
     [p seekToTime:kCMTimeZero completionHandler:nil];
+    [self playOrStartBuffering];
   } else {
     if (_eventSink) {
       _eventSink(@{@"event" : @"completed"});
@@ -273,21 +275,49 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
         break;
     }
   } else if (context == playbackLikelyToKeepUpContext) {
-    if ([[_player currentItem] isPlaybackLikelyToKeepUp]) {
-      [self updatePlayingState];
-      if (_eventSink != nil) {
-        _eventSink(@{@"event" : @"bufferingEnd"});
-      }
-    }
+
   } else if (context == playbackBufferEmptyContext) {
-    if (_eventSink != nil) {
-      _eventSink(@{@"event" : @"bufferingStart"});
-    }
+      [self playOrStartBuffering];
   } else if (context == playbackBufferFullContext) {
     if (_eventSink != nil) {
       _eventSink(@{@"event" : @"bufferingEnd"});
     }
   }
+}
+
+/// This method pauses the playback until the video buffer is filled enough to restart
+- (void)playOrStartBuffering {
+    CMTimeRange bufferedRange = [_player.currentItem.loadedTimeRanges.firstObject CMTimeRangeValue];
+    int64_t bufferEnd = FLTCMTimeToMillis(bufferedRange.start) + FLTCMTimeToMillis(bufferedRange.duration);
+    int64_t secondsInBufferToRestartPlayback = 5;
+    BOOL isBufferedEnough = bufferEnd > [self position] + secondsInBufferToRestartPlayback * 1000 || bufferEnd == [self duration];
+
+    if (_player.currentItem.isPlaybackLikelyToKeepUp && isBufferedEnough) {
+        [self updatePlayingState];
+
+        if (_eventSink != nil) {
+          _eventSink(@{@"event" : @"bufferingEnd"});
+        }
+    } else {
+        BOOL isPlaying = _isPlaying;
+        [self pause];
+        _isPlaying = isPlaying;
+
+        if (_isWaitingForEnoughBuffered) {
+            return;
+        }
+
+        _isWaitingForEnoughBuffered = YES;
+
+        if (_eventSink != nil) {
+          _eventSink(@{@"event" : @"bufferingStart"});
+        }
+
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            self.isWaitingForEnoughBuffered = NO;
+            [self playOrStartBuffering];
+        });
+    }
 }
 
 - (void)updatePlayingState {
@@ -330,7 +360,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 
 - (void)play {
   _isPlaying = true;
-  [self updatePlayingState];
+  [self playOrStartBuffering];
 }
 
 - (void)pause {
@@ -347,9 +377,18 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 }
 
 - (void)seekTo:(int)location {
-  [_player seekToTime:CMTimeMake(location, 1000)
-      toleranceBefore:kCMTimeZero
-       toleranceAfter:kCMTimeZero];
+    [_player seekToTime:CMTimeMake(location, 1000)
+        toleranceBefore:kCMTimeZero
+         toleranceAfter:kCMTimeZero];
+
+    // Video may freeze after scrubbing while audio keeps playing.
+    // Sometimes it's caused by insufficiently filled video buffer (and sometimes by another unknown reason).
+    // This workaround pauses the playback until the video buffer is filled enough.
+    BOOL isPlaying = _isPlaying;
+    [self pause];
+    _isPlaying = isPlaying;
+
+    [self playOrStartBuffering];
 }
 
 - (void)setIsLooping:(bool)isLooping {
