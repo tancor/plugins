@@ -287,7 +287,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           initializingCompleter.complete(null);
           _applyLooping();
           _applyVolume();
-          _applyPlayPause();
+          _applyPlayPause(false);
           _applySpeed();
           break;
         case VideoEventType.completed:
@@ -352,8 +352,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// has been sent to the platform, not when playback itself is totally
   /// finished.
   Future<void> play() async {
-    value = value.copyWith(isPlaying: true);
-    await _applyPlayPause();
+    await _applyPlayPause(true);
   }
 
   /// Sets whether or not the video should loop after playing once. See also
@@ -365,8 +364,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
 
   /// Pauses the video.
   Future<void> pause() async {
-    value = value.copyWith(isPlaying: false);
-    await _applyPlayPause();
+    await _applyPlayPause(false);
   }
 
   Future<void> _applyLooping() async {
@@ -376,11 +374,12 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     await _videoPlayerPlatform.setLooping(_textureId, value.isLooping);
   }
 
-  Future<void> _applyPlayPause() async {
+  Future<void> _applyPlayPause(bool shouldPlay) async {
     if (!value.initialized || _isDisposed) {
       return;
     }
-    if (value.isPlaying) {
+
+    if (shouldPlay) {
       await _applySpeed();
       await _videoPlayerPlatform.play(_textureId);
 
@@ -394,12 +393,17 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           if (_isDisposed) {
             return;
           }
-          _updatePosition(newPosition);
+
+          print("[VideoPlayer] Timer callback: isActive = ${timer.isActive}");
+
+          _updateValue(newPosition, isPlaying: true);
         },
       );
     } else {
       _timer?.cancel();
       await _videoPlayerPlatform.pause(_textureId);
+      final Duration newPosition = await position;
+      _updateValue(newPosition, isPlaying: false);
     }
   }
 
@@ -442,7 +446,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     }
     await _videoPlayerPlatform.seekTo(_textureId, position);
     await _applySpeed();
-    _updatePosition(position);
+    _updateValue(position);
   }
 
   /// Sets the audio volume of [this].
@@ -482,9 +486,12 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     return Caption();
   }
 
-  void _updatePosition(Duration position) {
-    value = value.copyWith(position: position);
-    value = value.copyWith(caption: _getCaptionAt(position));
+  void _updateValue(Duration position, {bool isPlaying}) {
+    value = value.copyWith(
+        position: position,
+        caption: _getCaptionAt(position),
+        isPlaying: isPlaying,
+    );
   }
 }
 
