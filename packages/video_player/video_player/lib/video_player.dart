@@ -380,6 +380,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     }
 
     if (shouldPlay) {
+      _timer?.cancel();
+
       await _applySpeed();
       await _videoPlayerPlatform.play(_textureId);
 
