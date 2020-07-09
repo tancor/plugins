@@ -101,6 +101,8 @@ static void* playbackBufferFullContext = &playbackBufferFullContext;
     [p seekToTime:kCMTimeZero completionHandler:nil];
     [self playOrStartBuffering];
   } else {
+    _isPlaying = NO;
+    
     if (_eventSink) {
       _eventSink(@{@"event" : @"completed"});
     }
