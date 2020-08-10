@@ -562,24 +562,21 @@ class _VideoPlayerState extends State<VideoPlayer> {
     _textureId = widget.controller.textureId;
     // Need to listen for initialization events since the actual texture ID
     // becomes available after asynchronous initialization finishes.
-    widget.controller.addListener(_listener);
+    _addControllerListenerSafely(widget.controller, _listener);
   }
 
   @override
   void didUpdateWidget(VideoPlayer oldWidget) {
     super.didUpdateWidget(oldWidget);
-    oldWidget.controller.removeListener(_listener);
+    _removeControllerListenerSafely(oldWidget.controller, _listener);
     _textureId = widget.controller.textureId;
-    widget.controller.addListener(_listener);
+    _addControllerListenerSafely(widget.controller, _listener);
   }
 
   @override
   void deactivate() {
     super.deactivate();
-
-    if (!widget.controller._isDisposed) {
-      widget.controller.removeListener(_listener);
-    }
+    _removeControllerListenerSafely(widget.controller, _listener);
   }
 
   @override
@@ -587,6 +584,18 @@ class _VideoPlayerState extends State<VideoPlayer> {
     return _textureId == null
         ? Container()
         : _videoPlayerPlatform.buildView(_textureId);
+  }
+
+  void _addControllerListenerSafely(VideoPlayerController controller, VoidCallback listener) {
+    if (controller._isDisposed) {
+      controller.addListener(listener);
+    }
+  }
+
+  void _removeControllerListenerSafely(VideoPlayerController controller, VoidCallback listener) {
+    if (controller._isDisposed) {
+      controller.removeListener(listener);
+    }
   }
 }
 
