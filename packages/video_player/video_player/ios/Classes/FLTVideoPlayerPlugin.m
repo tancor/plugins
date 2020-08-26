@@ -292,7 +292,8 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     CMTimeRange bufferedRange = [_player.currentItem.loadedTimeRanges.firstObject CMTimeRangeValue];
     int64_t bufferEnd = FLTCMTimeToMillis(bufferedRange.start) + FLTCMTimeToMillis(bufferedRange.duration);
     int64_t secondsInBufferToRestartPlayback = 5;
-    BOOL isBufferedEnough = bufferEnd > [self position] + secondsInBufferToRestartPlayback * 1000 || bufferEnd == [self duration];
+    BOOL isBufferedEnough = bufferEnd >= MIN([self position] + secondsInBufferToRestartPlayback * 1000,
+                                             [self duration]);
 
     if (_player.currentItem.isPlaybackLikelyToKeepUp && isBufferedEnough) {
         [self updatePlayingState];
