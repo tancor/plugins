@@ -289,13 +289,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 
 /// This method pauses the playback until the video buffer is filled enough to restart
 - (void)playOrStartBuffering {
-    CMTimeRange bufferedRange = [_player.currentItem.loadedTimeRanges.firstObject CMTimeRangeValue];
-    int64_t bufferEnd = FLTCMTimeToMillis(bufferedRange.start) + FLTCMTimeToMillis(bufferedRange.duration);
-    int64_t secondsInBufferToRestartPlayback = 5;
-    BOOL isBufferedEnough = bufferEnd >= MIN([self position] + secondsInBufferToRestartPlayback * 1000,
-                                             [self duration]);
-
-    if (_player.currentItem.isPlaybackLikelyToKeepUp && isBufferedEnough) {
+    if (_player.currentItem.isPlaybackLikelyToKeepUp) {
         [self updatePlayingState];
 
         if (_eventSink != nil) {
