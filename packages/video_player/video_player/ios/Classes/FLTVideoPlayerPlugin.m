@@ -93,6 +93,12 @@ static void* playbackBufferFullContext = &playbackBufferFullContext;
                                            selector:@selector(itemDidPlayToEndTime:)
                                                name:AVPlayerItemDidPlayToEndTimeNotification
                                              object:item];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidEnterBackground:) name:UIApplicationDidEnterBackgroundNotification object:nil];
+
+}
+
+- (void)applicationDidEnterBackground:(NSNotification *)notification {
+    [self play];
 }
 
 - (void)itemDidPlayToEndTime:(NSNotification*)notification {
