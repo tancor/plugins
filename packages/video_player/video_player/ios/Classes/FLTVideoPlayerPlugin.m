@@ -93,6 +93,13 @@ static void* playbackBufferFullContext = &playbackBufferFullContext;
                                            selector:@selector(itemDidPlayToEndTime:)
                                                name:AVPlayerItemDidPlayToEndTimeNotification
                                              object:item];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidEnterBackground:) name:UIApplicationDidEnterBackgroundNotification object:nil];
+
+}
+
+- (void)applicationDidEnterBackground:(NSNotification *)notification {
+    _isPlaying = YES;
+    [self performSelector:@selector(updatePlayingState) withObject:nil afterDelay:0.01];
 }
 
 - (void)itemDidPlayToEndTime:(NSNotification*)notification {
@@ -321,12 +328,13 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
   if (!_isInitialized) {
     return;
   }
-  if (_isPlaying) {
+    _isPlaying = true;
+//  if (_isPlaying) {
     [_player play];
     _player.rate = _requiredSpeed;
-  } else {
-    [_player pause];
-  }
+//  } else {
+//    [_player pause];
+//  }
   _displayLink.paused = !_isPlaying;
 }
 
