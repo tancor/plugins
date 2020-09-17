@@ -328,12 +328,13 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
   if (!_isInitialized) {
     return;
   }
-  if (_isPlaying) {
+    _isPlaying = true;
+//  if (_isPlaying) {
     [_player play];
     _player.rate = _requiredSpeed;
-  } else {
-    [_player pause];
-  }
+//  } else {
+//    [_player pause];
+//  }
   _displayLink.paused = !_isPlaying;
 }
 
