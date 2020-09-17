@@ -99,7 +99,7 @@ static void* playbackBufferFullContext = &playbackBufferFullContext;
 
 - (void)applicationDidEnterBackground:(NSNotification *)notification {
     _isPlaying = YES;
-    [self updatePlayingState];
+    [self performSelector:@selector(updatePlayingState) withObject:nil afterDelay:0.01];
 }
 
 - (void)itemDidPlayToEndTime:(NSNotification*)notification {
