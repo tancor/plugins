@@ -101,8 +101,6 @@ static void* playbackBufferFullContext = &playbackBufferFullContext;
     [[MPRemoteCommandCenter sharedCommandCenter].playCommand addTarget:self action:@selector(pause)];
 }
 
-
-
 - (void)applicationDidEnterBackground:(NSNotification *)notification {
     _isPlaying = YES;
     [self performSelector:@selector(updatePlayingState) withObject:nil afterDelay:0.01];
