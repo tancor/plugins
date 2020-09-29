@@ -106,7 +106,8 @@ static void* playbackBufferFullContext = &playbackBufferFullContext;
 }
 
 - (MPRemoteCommandHandlerStatus)ppause {
-    [self pause];
+    _isPlaying = NO;
+    [_player play];
     
     return MPRemoteCommandHandlerStatusSuccess;
 }
