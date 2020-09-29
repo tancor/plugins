@@ -5,6 +5,7 @@
 #import "FLTVideoPlayerPlugin.h"
 #import <AVFoundation/AVFoundation.h>
 #import <GLKit/GLKit.h>
+#import <MediaPlayer/MediaPlayer.h>
 
 #if !__has_feature(objc_arc)
 #error Code Requires ARC.
@@ -95,7 +96,12 @@ static void* playbackBufferFullContext = &playbackBufferFullContext;
                                              object:item];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidEnterBackground:) name:UIApplicationDidEnterBackgroundNotification object:nil];
 
+    
+    [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
+    [[MPRemoteCommandCenter sharedCommandCenter].playCommand addTarget:self action:@selector(pause)];
 }
+
+
 
 - (void)applicationDidEnterBackground:(NSNotification *)notification {
     _isPlaying = YES;
