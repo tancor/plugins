@@ -100,6 +100,9 @@ static void* playbackBufferFullContext = &playbackBufferFullContext;
     [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
     [MPRemoteCommandCenter sharedCommandCenter].playCommand.enabled = YES;
     [[MPRemoteCommandCenter sharedCommandCenter].playCommand addTarget:self action:@selector(ppause)];
+    [MPRemoteCommandCenter sharedCommandCenter].pauseCommand.enabled = YES;
+    [[MPRemoteCommandCenter sharedCommandCenter].pauseCommand addTarget:self action:@selector(ppause)];
+    [MPRemoteCommandCenter sharedCommandCenter].nextTrackCommand.enabled = YES;
 }
 
 - (MPRemoteCommandHandlerStatus)ppause {
