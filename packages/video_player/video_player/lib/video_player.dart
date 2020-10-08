@@ -510,7 +510,7 @@ class _VideoAppLifeCycleObserver extends Object with WidgetsBindingObserver {
         break;
       case AppLifecycleState.resumed:
         if (_wasPlayingBeforePause) {
-//          _controller.play();
+          _controller.play();
         }
         break;
       default:
